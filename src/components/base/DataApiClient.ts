@@ -14,5 +14,4 @@ export class DataApiClient {
       .get<{ total: number; items: IProduct[] }>('/product/')
       .then((res) => res.items);
   }
-
 }
