@@ -1,5 +1,5 @@
 
-import { IApi, IProduct} from '../../types';
+import { IApi, IProduct , IOrderRequest, IOrderResponse} from '../../types';
 
 export class DataApiClient {
   private api: IApi;
@@ -14,4 +14,11 @@ export class DataApiClient {
       .get<{ total: number; items: IProduct[] }>('/product/')
       .then((res) => res.items);
   }
+
+  // Отправка заказа на сервер
+  createOrder(orderData: IOrderRequest): Promise<IOrderResponse> {
+    return this.api.post<IOrderResponse>('/order', orderData);
+  }
 }
+
+

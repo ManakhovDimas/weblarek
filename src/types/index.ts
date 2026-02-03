@@ -5,8 +5,11 @@ export interface IApi {
     post<T extends object>(uri: string, data: object, method?: ApiPostMethods): Promise<T>;
 }
 
+// Тип для ошибок валидации
+export type ValidationErrors<T> = Partial<Record<keyof T, string>>;
+
 // Тип для способа оплаты
-export type TPayment = 'online' | 'offline';
+export type TPayment = 'online' | 'offline'| '';
 
 // Интерфейс для товара
 export interface IProduct {
@@ -26,3 +29,16 @@ export interface IBuyer {
   address: string;
 }
 
+export interface IOrderRequest {
+  payment: string;
+  email: string;
+  phone: string;
+  address: string;
+  total: number;
+  items: string[];
+}
+
+export interface IOrderResponse {
+  id: string;
+  total: number;
+}

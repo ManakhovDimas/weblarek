@@ -1,12 +1,12 @@
 import './scss/styles.scss';
 // src/main.ts
-import { Catalog } from './components/base/Models/Catalog';
-import { Cart } from './components/base/Models/Cart';
-import { Buyer } from './components/base/Models/Buyer';
+import { Catalog } from './components/Models/Catalog';
+import { Cart } from './components/Models/Cart';
+import { Buyer } from './components/Models/Buyer';
 import { apiProducts } from './utils/data';
 import { API_URL } from './utils/constants';
 import { Api } from './components/base/Api';
-import { DataApiClient } from './components/base/DataApiClient';
+import { DataApiClient } from './components/Api/DataApiClient';
 import { IProduct } from './types';
 
 const buyer = new Buyer();
@@ -25,8 +25,27 @@ console.log('Данные покупателя после установки:', 
 const validationErrors = buyer.validateData();
 console.log('Ошибки валидации (должно быть пусто):', validationErrors);
 
+
 buyer.clearData();
 console.log('Данные покупателя после очистки:', buyer.getData());
+
+//  Некорректные данные (пустые поля)
+console.log('\nТест с некорректными данными (пустые поля):');
+buyer.setData({ 
+  email: '', // Пустой email
+  phone: '', // Пустой телефон
+  address: '', // Пустой адрес
+  payment: '' // Пустой способ оплаты
+}); 
+
+console.log('Данные покупателя с ошибками:', buyer.getData()); 
+
+const validationErrors1 = buyer.validateData(); 
+console.log('Ошибки валидации (должно быть 4 ошибки):', validationErrors1); 
+console.log('Количество ошибок:', Object.keys(validationErrors1).length);
+console.log('Валидация пройдена:', Object.keys(validationErrors1).length === 0);
+
+
 
 // Создаем и тестируем модель Cart
 const cart = new Cart();
