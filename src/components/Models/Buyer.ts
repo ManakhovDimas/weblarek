@@ -1,4 +1,4 @@
-// src/components/Models/Buyer.ts
+
 import { IBuyer, TPayment, ValidationErrors } from '../../types';
 
 export class Buyer {
@@ -6,6 +6,7 @@ export class Buyer {
   private email: string = '';
   private phone: string = '';
   private address: string = '';
+  
 
 
   constructor(data: Partial<IBuyer> = {}) {
@@ -20,6 +21,7 @@ export class Buyer {
     if (data.email !== undefined) this.email = data.email;
     if (data.phone !== undefined) this.phone = data.phone;
     if (data.address !== undefined) this.address = data.address;
+    
   }
 
   getData(): IBuyer {

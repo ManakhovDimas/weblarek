@@ -4,11 +4,13 @@ import { IProduct } from '../../types';
 export class Catalog {
   private products: IProduct[] = [];
   private selectedProduct: IProduct | null = null;
+  
 
   constructor() {}
 
   saveProducts(products: IProduct[]): void {
     this.products = products;
+    
   }
 
   getProducts(): IProduct[] {

@@ -13,6 +13,7 @@ export class Cart {
  
   addItem(product: IProduct): void {
     this.items.push(product);
+    
   }
 
   removeItem(productId: string): void {
