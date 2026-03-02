@@ -1,6 +1,7 @@
-import { Component } from '../base/Component';
+import { Form } from './Form';
 import { cloneTemplate, ensureElement } from '../../utils/utils';
 import { IBuyer, ValidationErrors } from '../../types';
+import { IEvents } from '../base/Events';
 
 interface IContactsFormActions {
     onEmailChange: (email: string) => void;
@@ -8,78 +9,102 @@ interface IContactsFormActions {
     onSubmit: () => void;
 }
 
-export class ContactsForm extends Component<IContactsFormActions> {
+export class ContactsForm extends Form<IContactsFormActions> {
     protected _emailInput: HTMLInputElement;
     protected _phoneInput: HTMLInputElement;
-    protected _submitButton: HTMLButtonElement;
-    protected _errorsElement: HTMLElement;
+    private _isInitialized: boolean = false;
 
     constructor(container: HTMLElement, actions?: IContactsFormActions) {
         super(container);
         
         this._emailInput = ensureElement<HTMLInputElement>('input[name="email"]', container);
         this._phoneInput = ensureElement<HTMLInputElement>('input[name="phone"]', container);
-        this._submitButton = ensureElement<HTMLButtonElement>('button[type="submit"]', container);
-        this._errorsElement = ensureElement<HTMLElement>('.form__errors', container);
+        
+      
+        if (!this._isInitialized) {
+            this.setupEmailHandler(actions);
+            this.setupPhoneHandler(actions);
+            
+        
+            super.setupSubmitHandler(() => {
+                if (actions?.onSubmit) {
+                    actions.onSubmit();
+                }
+            });
+            
+            this._isInitialized = true;
+        }
+        
+        this.validate();
+    }
+
+    private setupEmailHandler(actions?: IContactsFormActions): void {
+        const oldInput = this._emailInput;
+        const newInput = oldInput.cloneNode(true) as HTMLInputElement;
+        oldInput.parentNode?.replaceChild(newInput, oldInput);
+        
+        this._emailInput = ensureElement<HTMLInputElement>('input[name="email"]', this.container);
         
         this._emailInput.addEventListener('input', () => {
             if (actions?.onEmailChange) {
                 actions.onEmailChange(this._emailInput.value);
             }
-            this.validateForm();
+            this.validate();
         });
+    }
+
+    private setupPhoneHandler(actions?: IContactsFormActions): void {
+        const oldInput = this._phoneInput;
+        const newInput = oldInput.cloneNode(true) as HTMLInputElement;
+        oldInput.parentNode?.replaceChild(newInput, oldInput);
+        
+        this._phoneInput = ensureElement<HTMLInputElement>('input[name="phone"]', this.container);
         
         this._phoneInput.addEventListener('input', () => {
             if (actions?.onPhoneChange) {
                 actions.onPhoneChange(this._phoneInput.value);
             }
-            this.validateForm();
+            this.validate();
         });
-        
-        this.container.addEventListener('submit', (event) => {
-            event.preventDefault();
-            if (actions?.onSubmit && this._submitButton.disabled === false) {
-                actions.onSubmit();
-            }
-        });
-        
-        this.validateForm();
     }
 
     setEmail(email: string): void {
         this._emailInput.value = email;
-        this.validateForm();
+        this.validate();
     }
 
     setPhone(phone: string): void {
         this._phoneInput.value = phone;
-        this.validateForm();
+        this.validate();
     }
 
-    setErrors(errors: ValidationErrors<IBuyer>): void {
-        const errorMessages = Object.values(errors).filter(Boolean);
+
+    setValidationErrors(errors: ValidationErrors<IBuyer>): void {
+        this.setErrors(errors);
+        this.validate();
+    }
+
+
+    setValid(isValid: boolean): void {
+        this.setSubmitButtonEnabled(isValid);
+    }
+
+    protected validate(): boolean {
+        const email = this._emailInput.value.trim();
+        const phone = this._phoneInput.value.trim();
+        const isValid = email !== '' && phone !== '';
         
-        if (errorMessages.length > 0) {
-            this._errorsElement.textContent = errorMessages.join(', ');
-            this._errorsElement.style.display = 'block';
+        this.setSubmitButtonEnabled(isValid);
+        return isValid;
+    }
+
+    protected setSubmitButtonEnabled(enabled: boolean): void {
+        super.setSubmitButtonEnabled(enabled);
+        if (enabled) {
+            this._submitButton.classList.remove('button_disabled');
         } else {
-            this._errorsElement.style.display = 'none';
+            this._submitButton.classList.add('button_disabled');
         }
-        
-        this.validateForm();
-    }
-
-    getData(): Partial<IBuyer> {
-        return {
-            email: this._emailInput.value,
-            phone: this._phoneInput.value
-        };
-    }
-
-    private validateForm(): void {
-        const isValid = this._emailInput.value.trim() !== '' && 
-                       this._phoneInput.value.trim() !== '';
-        this._submitButton.disabled = !isValid;
     }
 
     render(): HTMLElement {
@@ -87,7 +112,21 @@ export class ContactsForm extends Component<IContactsFormActions> {
     }
 }
 
-export function createContactsForm(actions?: IContactsFormActions): ContactsForm {
+
+export function createContactsForm(events: IEvents): ContactsForm {
     const template = cloneTemplate<HTMLElement>('#contacts');
+    
+    const actions: IContactsFormActions = {
+        onEmailChange: (email: string) => {
+            events.emit('email:change', { email });
+        },
+        onPhoneChange: (phone: string) => {
+            events.emit('phone:change', { phone });
+        },
+        onSubmit: () => {
+            events.emit('contacts:submit');
+        }
+    };
+    
     return new ContactsForm(template, actions);
 }

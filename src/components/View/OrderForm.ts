@@ -1,6 +1,7 @@
-import { Component } from '../base/Component';
+import { Form } from './Form';
 import { cloneTemplate, ensureElement } from '../../utils/utils';
 import { IBuyer, ValidationErrors, TPayment } from '../../types';
+import { IEvents } from '../base/Events';
 
 interface IOrderFormActions {
     onPaymentChange: (payment: TPayment) => void;
@@ -8,22 +9,42 @@ interface IOrderFormActions {
     onSubmit: () => void;
 }
 
-export class OrderForm extends Component<IOrderFormActions> {
+export class OrderForm extends Form<IOrderFormActions> {
     protected _paymentButtons: NodeListOf<HTMLButtonElement>;
     protected _addressInput: HTMLInputElement;
-    protected _nextButton: HTMLButtonElement;
-    protected _errorsElement: HTMLElement;
     private _selectedPayment: TPayment = '';
+    private _isInitialized: boolean = false;
 
     constructor(container: HTMLElement, actions?: IOrderFormActions) {
         super(container);
         
         this._paymentButtons = container.querySelectorAll('button[name]') as NodeListOf<HTMLButtonElement>;
         this._addressInput = ensureElement<HTMLInputElement>('input[name="address"]', container);
-        this._nextButton = ensureElement<HTMLButtonElement>('button[type="submit"]', container);
-        this._errorsElement = ensureElement<HTMLElement>('.form__errors', container);
         
-      
+        if (!this._isInitialized) {
+            this.setupPaymentHandlers(actions);
+            this.setupAddressHandler(actions);
+            
+            super.setupSubmitHandler(() => {
+                if (actions?.onSubmit) {
+                    actions.onSubmit();
+                }
+            });
+            
+            this._isInitialized = true;
+        }
+        
+        this.validate();
+    }
+
+    private setupPaymentHandlers(actions?: IOrderFormActions): void {
+        this._paymentButtons.forEach(button => {
+            const newButton = button.cloneNode(true) as HTMLButtonElement;
+            button.parentNode?.replaceChild(newButton, button);
+        });
+        
+        this._paymentButtons = this.container.querySelectorAll('button[name]') as NodeListOf<HTMLButtonElement>;
+        
         this._paymentButtons.forEach(button => {
             button.addEventListener('click', () => {
                 const payment = button.name as TPayment;
@@ -33,28 +54,27 @@ export class OrderForm extends Component<IOrderFormActions> {
                 }
             });
         });
+    }
+
+    private setupAddressHandler(actions?: IOrderFormActions): void {
+        const oldInput = this._addressInput;
+        const newInput = oldInput.cloneNode(true) as HTMLInputElement;
+        oldInput.parentNode?.replaceChild(newInput, oldInput);
         
+        this._addressInput = ensureElement<HTMLInputElement>('input[name="address"]', this.container);
+        
+
         this._addressInput.addEventListener('input', () => {
             if (actions?.onAddressChange) {
                 actions.onAddressChange(this._addressInput.value);
             }
-            this.validateForm();
+            this.validate();
         });
-        
-        this.container.addEventListener('submit', (event) => {
-            event.preventDefault();
-            if (actions?.onSubmit && this._nextButton.disabled === false) {
-                actions.onSubmit();
-            }
-        });
-        
-        this.validateForm();
     }
 
     setPaymentMethod(method: TPayment): void {
         this._selectedPayment = method;
         
-       
         this._paymentButtons.forEach(button => {
             if (button.name === method) {
                 button.classList.add('button_alt-active');
@@ -63,38 +83,38 @@ export class OrderForm extends Component<IOrderFormActions> {
             }
         });
         
-        this.validateForm();
+        this.validate();
     }
 
     setAddress(address: string): void {
         this._addressInput.value = address;
-        this.validateForm();
+        this.validate();
     }
 
-    setErrors(errors: ValidationErrors<IBuyer>): void {
-        const errorMessages = Object.values(errors).filter(Boolean);
+    setValidationErrors(errors: ValidationErrors<IBuyer>): void {
+        this.setErrors(errors);
+        this.validate();
+    }
+
+    setValid(isValid: boolean): void {
+        this.setSubmitButtonEnabled(isValid);
+    }
+
+    protected validate(): boolean {
+        const address = this._addressInput.value.trim();
+        const isValid = this._selectedPayment !== '' && address !== '';
         
-        if (errorMessages.length > 0) {
-            this._errorsElement.textContent = errorMessages.join(', ');
-            this._errorsElement.style.display = 'block';
+        this.setSubmitButtonEnabled(isValid);
+        return isValid;
+    }
+
+    protected setSubmitButtonEnabled(enabled: boolean): void {
+        super.setSubmitButtonEnabled(enabled);
+        if (enabled) {
+            this._submitButton.classList.remove('button_disabled');
         } else {
-            this._errorsElement.style.display = 'none';
+            this._submitButton.classList.add('button_disabled');
         }
-        
-        this.validateForm();
-    }
-
-    getData(): Partial<IBuyer> {
-        return {
-            payment: this._selectedPayment,
-            address: this._addressInput.value
-        };
-    }
-
-    private validateForm(): void {
-        const isValid = this._selectedPayment !== '' && 
-                       this._addressInput.value.trim() !== '';
-        this._nextButton.disabled = !isValid;
     }
 
     render(): HTMLElement {
@@ -102,8 +122,20 @@ export class OrderForm extends Component<IOrderFormActions> {
     }
 }
 
-
-export function createOrderForm(actions?: IOrderFormActions): OrderForm {
+export function createOrderForm(events: IEvents): OrderForm {
     const template = cloneTemplate<HTMLElement>('#order');
+    
+    const actions: IOrderFormActions = {
+        onPaymentChange: (payment: TPayment) => {
+            events.emit('payment:change', { payment });
+        },
+        onAddressChange: (address: string) => {
+            events.emit('address:change', { address });
+        },
+        onSubmit: () => {
+            events.emit('order:submit');
+        }
+    };
+    
     return new OrderForm(template, actions); 
 }

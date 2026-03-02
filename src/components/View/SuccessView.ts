@@ -1,29 +1,28 @@
 import { Component } from '../base/Component';
 import { cloneTemplate, ensureElement } from '../../utils/utils';
+import { IEvents } from '../base/Events';
 
-interface ISuccessViewActions {
-    onClose: () => void;
-}
-
-export class SuccessView extends Component<ISuccessViewActions> {
+export class SuccessView extends Component<HTMLElement> {
     protected _title: HTMLElement;
     protected _description: HTMLElement;
     protected _closeButton: HTMLButtonElement;
+    private _events: IEvents;
 
-    constructor(container: HTMLElement, actions?: ISuccessViewActions) {
+    constructor(container: HTMLElement, events: IEvents) {
         super(container);
-        
+        this._events = events;
+
         this._title = ensureElement<HTMLElement>('.order-success__title', container);
         this._description = ensureElement<HTMLElement>('.order-success__description', container);
         this._closeButton = ensureElement<HTMLButtonElement>('.order-success__close', container);
-        
-        if (actions?.onClose) {
-            this._closeButton.addEventListener('click', actions.onClose);
-        }
+
+ 
+        this._closeButton.addEventListener('click', () => {
+            this._events.emit('modal:close');
+        });
     }
 
     setTotal(total: number): void {
-      
         if (this._description) {
             this._description.textContent = `Списано ${total} синапсов`;
         }
@@ -35,7 +34,7 @@ export class SuccessView extends Component<ISuccessViewActions> {
 }
 
 
-export function createSuccessView(actions?: ISuccessViewActions): SuccessView {
+export function createSuccessView(events: IEvents): SuccessView {
     const template = cloneTemplate<HTMLElement>('#success');
-    return new SuccessView(template, actions);
+    return new SuccessView(template, events);
 }

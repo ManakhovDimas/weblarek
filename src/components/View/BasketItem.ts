@@ -1,31 +1,34 @@
 import { Component } from '../base/Component';
 import { cloneTemplate, ensureElement } from '../../utils/utils';
 import { IProduct } from '../../types';
+import { IEvents } from '../base/Events';
 
-interface IBasketItemActions {
-    onDelete: () => void;
-}
-
-export class BasketItem extends Component<IBasketItemActions> {
+export class BasketItem extends Component<HTMLElement> {
     protected _index: HTMLElement;
     protected _title: HTMLElement;
     protected _price: HTMLElement;
     protected _deleteButton: HTMLButtonElement;
+    private _events: IEvents;
+    private _productId!: string;
 
-    constructor(container: HTMLElement, actions?: IBasketItemActions) {
+    constructor(container: HTMLElement, events: IEvents) {
         super(container);
-        
+        this._events = events;
+
         this._index = ensureElement<HTMLElement>('.basket__item-index', container);
         this._title = ensureElement<HTMLElement>('.card__title', container);
         this._price = ensureElement<HTMLElement>('.card__price', container);
         this._deleteButton = ensureElement<HTMLButtonElement>('.basket__item-delete', container);
-        
-        if (actions?.onDelete) {
-            this._deleteButton.addEventListener('click', (event) => {
-                event.preventDefault();
-                actions.onDelete();
-            });
-        }
+
+      
+        this._deleteButton.addEventListener('click', (event) => {
+            event.preventDefault();
+            this._events.emit('cart:remove', { id: this._productId,fromBasket: true });
+        });
+    }
+
+    setProductId(id: string): void {
+        this._productId = id;
     }
 
     setIndex(index: number): void {
@@ -52,10 +55,11 @@ export class BasketItem extends Component<IBasketItemActions> {
 }
 
 
-export function createBasketItem(item: IProduct, index: number, actions?: IBasketItemActions): BasketItem {
+export function createBasketItem(item: IProduct, index: number, events: IEvents): BasketItem {
     const template = cloneTemplate<HTMLElement>('#card-basket');
-    const basketItem = new BasketItem(template, actions);
+    const basketItem = new BasketItem(template, events);
     
+    basketItem.setProductId(item.id);
     basketItem.setIndex(index);
     basketItem.setTitle(item.title);
     basketItem.setPrice(item.price || 0);
