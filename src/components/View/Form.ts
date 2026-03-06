@@ -12,7 +12,6 @@ export abstract class Form<T> extends Component<T> {
         this._errorsElement = ensureElement<HTMLElement>('.form__errors', container);
     }
 
-
     protected setErrors(errors: Record<string, string>): void {
         const errorMessages = Object.values(errors).filter(Boolean);
         
@@ -24,14 +23,9 @@ export abstract class Form<T> extends Component<T> {
         }
     }
 
-
     protected setSubmitButtonEnabled(enabled: boolean): void {
         this._submitButton.disabled = !enabled;
     }
-
-
-    protected abstract validate(): boolean;
-
 
     protected setupSubmitHandler(callback?: () => void): void {
         this.container.addEventListener('submit', (event) => {

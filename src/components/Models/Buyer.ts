@@ -1,39 +1,33 @@
-
 import { IEvents } from '../base/Events';
 import { IBuyer, ValidationErrors } from '../../types';
 
 export class Buyer {
-    private _data: Partial<IBuyer>;
+    private _data: IBuyer;
     private _events: IEvents;
+    
 
     constructor(events: IEvents, initialData: Partial<IBuyer> = {}) {
         this._events = events;
-        this._data = initialData;
+        this._data = {
+            payment: '',
+            address: '',
+            email: '',
+            phone: '',
+            ...initialData
+        };
     }
 
- 
     setData(data: Partial<IBuyer>): void {
         this._data = { ...this._data, ...data };
         this._events.emit('form:update');
     }
 
-    getData(): Partial<IBuyer> {
+    getData(): IBuyer {
         return { ...this._data };
     }
 
-
-    validateStep1(): boolean {
-        return Boolean(this._data.payment) && Boolean(this._data.address?.trim());
-    }
-
-
-    validateStep2(): boolean {
-        return Boolean(this._data.email?.trim()) && Boolean(this._data.phone?.trim());
-    }
-
-      validateData(): ValidationErrors<IBuyer> { 
-    const errors: ValidationErrors<IBuyer> = {}; 
- 
+    validateData(): ValidationErrors<IBuyer> {
+        const errors: ValidationErrors<IBuyer> = {};
 
         if (!this._data.payment) {
             errors.payment = 'Выберите способ оплаты';
@@ -51,9 +45,13 @@ export class Buyer {
         return errors;
     }
 
-
     clearData(): void {
-        this._data = {};
+        this._data = {
+            payment: '',
+            address: '',
+            email: '',
+            phone: ''
+        };
         this._events.emit('form:update');
     }
 }

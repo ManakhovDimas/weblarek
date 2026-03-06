@@ -1,20 +1,19 @@
 import { Card } from './Card';
-import { IEvents } from '../base/Events';
 import { categoryMap } from '../../utils/constants';
 import { IProduct } from '../../types';
+
+interface CatalogItemActions {
+    onClick: () => void;
+}
 
 export class CatalogItem extends Card<IProduct> {
     protected _image?: HTMLImageElement;
     protected _category?: HTMLElement;
     protected _description?: HTMLElement;
-    private _events: IEvents;
-    private _product: IProduct;
 
-    constructor(container: HTMLElement, product: IProduct, events: IEvents) {
+    constructor(container: HTMLElement, actions?: CatalogItemActions) {
         super(container);
-        this._events = events;
-        this._product = product;
-
+        
         const imageElement = container.querySelector('.card__image');
         if (imageElement) {
             this._image = imageElement as HTMLImageElement;
@@ -30,10 +29,9 @@ export class CatalogItem extends Card<IProduct> {
             this._description = descriptionElement as HTMLElement;
         }
 
-
-        container.addEventListener('click', () => {
-            this._events.emit('card:click', this._product);
-        });
+        if (actions?.onClick) {
+            container.addEventListener('click', actions.onClick);
+        }
     }
 
     setCardImage(src: string, alt?: string): void {
@@ -58,25 +56,22 @@ export class CatalogItem extends Card<IProduct> {
             this.setText(this._description, description);
         }
     }
-
-    render(data?: Partial<IProduct>): HTMLElement {
-        const productData = data || this._product;
-        
-        if (productData.title) this.setTitle(productData.title);
-        if (productData.category) this.setCategory(productData.category);
-        if (productData.price !== undefined) this.setPrice(productData.price);
-        if (productData.image) this.setCardImage(productData.image, productData.title);
-        if (productData.description && this._description) {
-            this.setDescription(productData.description);
-        }
-        
-        return this.container;
-    }
 }
 
-
-export function createCatalogItem(product: IProduct, events: IEvents): CatalogItem {
+export function createCatalogItem(product: IProduct, onClick: () => void): CatalogItem {
     const template = document.querySelector('#card-catalog') as HTMLTemplateElement;
     const container = template.content.cloneNode(true) as HTMLElement;
-    return new CatalogItem(container.firstElementChild as HTMLElement, product, events);
+    
+    const catalogItem = new CatalogItem(
+        container.firstElementChild as HTMLElement,
+        { onClick }
+    );
+    
+    catalogItem.setTitle(product.title);
+    catalogItem.setCategory(product.category);
+    catalogItem.setPrice(product.price);
+    catalogItem.setCardImage(product.image, product.title);
+    catalogItem.setDescription(product.description);
+    
+    return catalogItem;
 }

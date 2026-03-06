@@ -16,7 +16,6 @@ export class SuccessView extends Component<HTMLElement> {
         this._description = ensureElement<HTMLElement>('.order-success__description', container);
         this._closeButton = ensureElement<HTMLButtonElement>('.order-success__close', container);
 
- 
         this._closeButton.addEventListener('click', () => {
             this._events.emit('modal:close');
         });
@@ -27,12 +26,7 @@ export class SuccessView extends Component<HTMLElement> {
             this._description.textContent = `Списано ${total} синапсов`;
         }
     }
-
-    render(): HTMLElement {
-        return this.container;
-    }
 }
-
 
 export function createSuccessView(events: IEvents): SuccessView {
     const template = cloneTemplate<HTMLElement>('#success');

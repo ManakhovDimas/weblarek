@@ -1,68 +1,48 @@
-import { Component } from '../base/Component';
-import { cloneTemplate, ensureElement } from '../../utils/utils';
+import { Card } from './Card';
+import { ensureElement } from '../../utils/utils';
 import { IProduct } from '../../types';
-import { IEvents } from '../base/Events';
 
-export class BasketItem extends Component<HTMLElement> {
+interface BasketItemActions {
+    onClick: (event: MouseEvent) => void;
+}
+
+export class BasketItem extends Card<IProduct> {
     protected _index: HTMLElement;
-    protected _title: HTMLElement;
-    protected _price: HTMLElement;
     protected _deleteButton: HTMLButtonElement;
-    private _events: IEvents;
-    private _productId!: string;
 
-    constructor(container: HTMLElement, events: IEvents) {
+    constructor(container: HTMLElement, actions?: BasketItemActions) {
         super(container);
-        this._events = events;
-
+        
         this._index = ensureElement<HTMLElement>('.basket__item-index', container);
-        this._title = ensureElement<HTMLElement>('.card__title', container);
-        this._price = ensureElement<HTMLElement>('.card__price', container);
         this._deleteButton = ensureElement<HTMLButtonElement>('.basket__item-delete', container);
 
-      
-        this._deleteButton.addEventListener('click', (event) => {
-            event.preventDefault();
-            this._events.emit('cart:remove', { id: this._productId,fromBasket: true });
-        });
-    }
-
-    setProductId(id: string): void {
-        this._productId = id;
+        if (actions?.onClick) {
+            this._deleteButton.addEventListener('click', actions.onClick);
+        }
     }
 
     setIndex(index: number): void {
-        if (this._index) {
-            this._index.textContent = index.toString();
-        }
-    }
-
-    setTitle(title: string): void {
-        if (this._title) {
-            this._title.textContent = title;
-        }
-    }
-
-    setPrice(price: number): void {
-        if (this._price) {
-            this._price.textContent = `${price} синапсов`;
-        }
-    }
-
-    render(): HTMLElement {
-        return this.container;
+        this.setText(this._index, index.toString());
     }
 }
 
-
-export function createBasketItem(item: IProduct, index: number, events: IEvents): BasketItem {
-    const template = cloneTemplate<HTMLElement>('#card-basket');
-    const basketItem = new BasketItem(template, events);
+export function createBasketItem(item: IProduct, index: number, onClick: () => void): BasketItem {
+    const template = document.querySelector('#card-basket') as HTMLTemplateElement;
+    const container = template.content.cloneNode(true) as HTMLElement;
     
-    basketItem.setProductId(item.id);
-    basketItem.setIndex(index);
+    const basketItem = new BasketItem(
+        container.firstElementChild as HTMLElement,
+        {
+            onClick: (event: MouseEvent) => {
+                event.preventDefault();
+                onClick();
+            }
+        }
+    );
+    
     basketItem.setTitle(item.title);
-    basketItem.setPrice(item.price || 0);
+    basketItem.setPrice(item.price);
+    basketItem.setIndex(index);
     
     return basketItem;
 }
