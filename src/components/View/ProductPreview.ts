@@ -2,6 +2,7 @@ import { Card } from './Card';
 import { cloneTemplate } from '../../utils/utils';
 import { IProduct } from '../../types';
 import { IEvents } from '../base/Events';
+import { AppEvents } from '../../utils/constants';
 
 export class ProductPreview extends Card<IProduct> {
     protected _description: HTMLElement;
@@ -21,7 +22,7 @@ export class ProductPreview extends Card<IProduct> {
         
         if (this._button) {
             this._button.addEventListener('click', () => {
-                this._events.emit('preview:toggle');
+                this._events.emit(AppEvents.PREVIEW_TOGGLE);
             });
         }
     }

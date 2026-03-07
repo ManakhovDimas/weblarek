@@ -2,6 +2,7 @@ import { Form } from './Form';
 import { cloneTemplate, ensureElement } from '../../utils/utils';
 import { IBuyer, ValidationErrors, TPayment } from '../../types';
 import { IEvents } from '../base/Events';
+import { AppEvents } from '../../utils/constants';
 
 interface IOrderFormActions {
     onPaymentChange: (payment: TPayment) => void;
@@ -76,13 +77,13 @@ export function createOrderForm(events: IEvents): OrderForm {
     
     const actions: IOrderFormActions = {
         onPaymentChange: (payment: TPayment) => {
-            events.emit('payment:change', { payment });
+            events.emit(AppEvents.PAYMENT_CHANGE, { payment });
         },
         onAddressChange: (address: string) => {
-            events.emit('address:change', { address });
+            events.emit(AppEvents.ADDRESS_CHANGE, { address });
         },
         onSubmit: () => {
-            events.emit('order:submit');
+            events.emit(AppEvents.ORDER_SUBMIT);
         }
     };
     

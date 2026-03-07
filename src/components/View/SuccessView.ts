@@ -1,10 +1,10 @@
 import { Component } from '../base/Component';
 import { cloneTemplate, ensureElement } from '../../utils/utils';
 import { IEvents } from '../base/Events';
+import { AppEvents } from '../../utils/constants';
 
 export class SuccessView extends Component<HTMLElement> {
-    protected _title: HTMLElement;
-    protected _description: HTMLElement;
+    protected _total: HTMLElement;
     protected _closeButton: HTMLButtonElement;
     private _events: IEvents;
 
@@ -12,18 +12,17 @@ export class SuccessView extends Component<HTMLElement> {
         super(container);
         this._events = events;
 
-        this._title = ensureElement<HTMLElement>('.order-success__title', container);
-        this._description = ensureElement<HTMLElement>('.order-success__description', container);
+        this._total = ensureElement<HTMLElement>('.order-success__description', container);
         this._closeButton = ensureElement<HTMLButtonElement>('.order-success__close', container);
 
         this._closeButton.addEventListener('click', () => {
-            this._events.emit('modal:close');
+            this._events.emit(AppEvents.MODAL_CLOSE);
         });
     }
 
     setTotal(total: number): void {
-        if (this._description) {
-            this._description.textContent = `Списано ${total} синапсов`;
+        if (this._total) {
+            this._total.textContent = `Списано ${total} синапсов`;
         }
     }
 }

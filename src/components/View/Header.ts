@@ -1,6 +1,7 @@
 import { Component } from '../base/Component';
 import { IEvents } from '../base/Events';
 import { ensureElement } from '../../utils/utils';
+import { AppEvents } from '../../utils/constants';
 
 export class Header extends Component<HTMLElement> {
     protected _basketButton: HTMLButtonElement;
@@ -16,7 +17,7 @@ export class Header extends Component<HTMLElement> {
 
    
         this._basketButton.addEventListener('click', () => {
-            this._events.emit('basket:open');
+            this._events.emit(AppEvents.BASKET_OPEN);
         });
     }
 

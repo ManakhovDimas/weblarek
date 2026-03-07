@@ -5,7 +5,7 @@ import { Cart } from '../Models/Cart';
 import { Buyer } from '../Models/Buyer';
 import { DataApiClient } from '../Api/DataApiClient';
 import { IProduct, IOrderRequest, IOrderResponse, TPayment } from '../../types';
-import { CDN_URL } from '../../utils/constants';
+import { CDN_URL, AppEvents } from '../../utils/constants';
 
 // View компоненты
 import { Header } from '../View/Header';
@@ -13,19 +13,21 @@ import { GalleryView } from '../View/GalleryView';
 import { BasketView } from '../View/BasketView';
 import { OrderForm } from '../View/OrderForm';
 import { ContactsForm } from '../View/ContactsForm';
-import { getProductPreview,ProductPreview } from '../View/ProductPreview';
+import { ProductPreview } from '../View/ProductPreview';
 import { createBasketItem } from '../View/BasketItem';
-import { createSuccessView } from '../View/SuccessView';
+import { SuccessView } from '../View/SuccessView';
 import { createCatalogItem } from '../View/CatalogItem';
 
 // Интерфейс зависимостей для внедрения
 interface IAppDependencies {
     events: IEvents;
     apiClient: DataApiClient;
+    
     // Models
     catalog: Catalog;
     cart: Cart;
     buyer: Buyer;
+    
     // Views
     modal: Modal;
     header: Header;
@@ -33,40 +35,8 @@ interface IAppDependencies {
     basketView: BasketView;
     orderForm: OrderForm;
     contactsForm: ContactsForm;
-productPreview: ProductPreview;
-}
-
-// События приложения
-export enum AppEvents {
-    // События моделей
-    CATALOG_LOADED = 'catalog:loaded',
-    PRODUCT_SELECTED = 'product:selected',
-    CART_UPDATED = 'cart:updated',
-    BUYER_UPDATED = 'buyer:updated',
-    FORM_UPDATE = 'form:update',
-    
-    // События UI
-    MODAL_OPEN = 'modal:open',
-    MODAL_CLOSE = 'modal:close',
-    BASKET_OPEN = 'basket:open',
-    ORDER_OPEN = 'order:open',
-    CONTACTS_OPEN = 'contacts:open',
-    
-    // События форм
-    PAYMENT_CHANGE = 'payment:change',
-    ADDRESS_CHANGE = 'address:change',
-    EMAIL_CHANGE = 'email:change',
-    PHONE_CHANGE = 'phone:change',
-    ORDER_SUBMIT = 'order:submit',
-    CONTACTS_SUBMIT = 'contacts:submit',
-    
-    // События карточек
-    CARD_CLICK = 'card:click',
-    ADD_TO_CART = 'cart:add',
-    REMOVE_FROM_CART = 'cart:remove',
-    
-    // Новое событие для превью
-    PREVIEW_TOGGLE = 'preview:toggle'
+    productPreview: ProductPreview;
+    successView: SuccessView;
 }
 
 export class App {
@@ -85,7 +55,8 @@ export class App {
     private _basketView: BasketView;
     private _orderForm: OrderForm;
     private _contactsForm: ContactsForm;
-    private _productPreview: ReturnType<typeof getProductPreview>;
+    private _productPreview: ProductPreview;
+    private _successView: SuccessView;
 
     constructor(deps: IAppDependencies) {
         this._events = deps.events;
@@ -99,7 +70,8 @@ export class App {
         this._basketView = deps.basketView;
         this._orderForm = deps.orderForm;
         this._contactsForm = deps.contactsForm;
-        this._productPreview = getProductPreview(this._events);
+        this._productPreview = deps.productPreview;
+        this._successView = deps.successView;
     }
 
     init(): void {
@@ -108,7 +80,6 @@ export class App {
     }
 
     private setupEventListeners(): void {
-        
         this._events.on(AppEvents.CATALOG_LOADED, () => {
             this.renderCatalog();
         });
@@ -257,8 +228,8 @@ export class App {
             const catalogItem = createCatalogItem(
                 product,
                 () => {
+                    // Модель сама генерирует событие после обновления
                     this._catalog.setSelectedProduct(product);
-                    this._events.emit(AppEvents.CARD_CLICK, product);
                 }
             );
             catalogItems.push(catalogItem.render());
@@ -268,20 +239,18 @@ export class App {
     }
 
     private updateBasketView(items: IProduct[], total: number): void {
-        const basketItems: HTMLElement[] = [];
-        
-        items.forEach((item, index) => {
+        const basketItems = items.map((item, index) => {
             const basketItem = createBasketItem(
                 item,
                 index + 1,
                 () => {
-                    this._events.emit(AppEvents.REMOVE_FROM_CART, { 
-                        id: item.id, 
-                        fromBasket: true 
+                    this._events.emit(AppEvents.REMOVE_FROM_CART, {
+                        id: item.id,
+                        fromBasket: true
                     });
                 }
             );
-            basketItems.push(basketItem.render());
+            return basketItem.render();
         });
         
         this._basketView.setItems(basketItems);
@@ -316,8 +285,7 @@ export class App {
     }
 
     private showSuccess(total: number): void {
-        const successView = createSuccessView(this._events);
-        successView.setTotal(total);
-        this._modal.setContent(successView.render());
+        this._successView.setTotal(total);
+        this._modal.setContent(this._successView.render());
     }
 }

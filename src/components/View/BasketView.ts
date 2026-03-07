@@ -1,6 +1,7 @@
 import { Component } from '../base/Component';
 import { cloneTemplate, ensureElement } from '../../utils/utils';
 import { IEvents } from '../base/Events';
+import { AppEvents } from '../../utils/constants';
 
 export class BasketView extends Component<HTMLElement> {
     protected _list: HTMLElement;
@@ -16,12 +17,13 @@ export class BasketView extends Component<HTMLElement> {
         this._totalPrice = ensureElement<HTMLElement>('.basket__price', container);
         this._orderButton = ensureElement<HTMLButtonElement>('.basket__button', container);
 
+        // Блокируем кнопку при инициализации
+        this.setOrderButtonEnabled(false);
 
         this._orderButton.addEventListener('click', () => {
-            this._events.emit('order:open');
+            this._events.emit(AppEvents.ORDER_OPEN);
         });
     }
-
 
     setItems(items: HTMLElement[]): void {
         this._list.innerHTML = '';
@@ -53,12 +55,7 @@ export class BasketView extends Component<HTMLElement> {
         this.setTotalPrice(0);
         this.setOrderButtonEnabled(false);
     }
-
-    render(): HTMLElement {
-        return this.container;
-    }
 }
-
 
 export function createBasketView(events: IEvents): BasketView {
     const template = cloneTemplate<HTMLElement>('#basket');

@@ -1,6 +1,6 @@
-
 import { IEvents } from '../base/Events';
 import { IProduct } from '../../types';
+import { AppEvents } from '../../utils/constants';
 
 export class Cart {
     private _items: IProduct[] = [];
@@ -13,7 +13,7 @@ export class Cart {
     addItem(product: IProduct): void {
         if (!this.hasItem(product.id)) {
             this._items.push(product);
-            this._events.emit('cart:updated');
+            this._events.emit(AppEvents.CART_UPDATED);
         }
     }
 
@@ -22,7 +22,7 @@ export class Cart {
         const index = this._items.findIndex(item => item.id === productId);
         if (index !== -1) {
             this._items.splice(index, 1);
-            this._events.emit('cart:updated');
+            this._events.emit(AppEvents.CART_UPDATED);
         }
     }
 
@@ -45,7 +45,7 @@ export class Cart {
 
     clear(): void {
         this._items = [];
-        this._events.emit('cart:updated');
+        this._events.emit(AppEvents.CART_UPDATED);
     }
 }
 

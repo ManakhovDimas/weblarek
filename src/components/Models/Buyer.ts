@@ -1,10 +1,10 @@
 import { IEvents } from '../base/Events';
 import { IBuyer, ValidationErrors } from '../../types';
+import { AppEvents } from '../../utils/constants';
 
 export class Buyer {
     private _data: IBuyer;
     private _events: IEvents;
-    
 
     constructor(events: IEvents, initialData: Partial<IBuyer> = {}) {
         this._events = events;
@@ -19,7 +19,7 @@ export class Buyer {
 
     setData(data: Partial<IBuyer>): void {
         this._data = { ...this._data, ...data };
-        this._events.emit('form:update');
+        this._events.emit(AppEvents.FORM_UPDATE);
     }
 
     getData(): IBuyer {
@@ -52,6 +52,6 @@ export class Buyer {
             email: '',
             phone: ''
         };
-        this._events.emit('form:update');
+        this._events.emit(AppEvents.FORM_UPDATE);
     }
 }

@@ -237,8 +237,6 @@ constructor(data: Partial<IBuyer> = {})
 Методы класса:
 - `setData(data: Partial<IBuyer>)` - установка данных покупателя
 - `getData(): Partial<IBuyer>` - получение данных покупателя
-- `validateStep1(): boolean` - валидация первого шага (оплата и адрес)
-- `validateStep2(): boolean` - валидация второго шага (email и телефон)
 - `validateData(): ValidationErrors<IBuyer>` - полная валидация всех полей
 - `clearData(): void` - очистка данных покупателя
 

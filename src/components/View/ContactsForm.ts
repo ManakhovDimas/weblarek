@@ -2,6 +2,7 @@ import { Form } from './Form';
 import { cloneTemplate, ensureElement } from '../../utils/utils';
 import { IBuyer, ValidationErrors } from '../../types';
 import { IEvents } from '../base/Events';
+import { AppEvents } from '../../utils/constants';
 
 interface IContactsFormActions {
     onEmailChange: (email: string) => void;
@@ -65,13 +66,13 @@ export function createContactsForm(events: IEvents): ContactsForm {
     
     const actions: IContactsFormActions = {
         onEmailChange: (email: string) => {
-            events.emit('email:change', { email });
+            events.emit(AppEvents.EMAIL_CHANGE, { email });
         },
         onPhoneChange: (phone: string) => {
-            events.emit('phone:change', { phone });
+            events.emit(AppEvents.PHONE_CHANGE, { phone });
         },
         onSubmit: () => {
-            events.emit('contacts:submit');
+            events.emit(AppEvents.CONTACTS_SUBMIT);
         }
     };
     
